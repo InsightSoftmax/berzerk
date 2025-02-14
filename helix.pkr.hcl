@@ -26,7 +26,4 @@ build {
   provisioner "shell" {
     script = "helix.sh"
   }
-  post-processor "vultr-snapshot" {
-  snapshot_name = "helix-marketplace"
-  }
 }

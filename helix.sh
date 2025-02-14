@@ -10,7 +10,7 @@ if ! [ -x "$(command -v ollama)" ]; then
   curl -fsSL https://ollama.com/install.sh | sh
 fi
 
-# Install Helix 
+# Install Helix
 curl -sL -O https://get.helix.ml/install.sh
 chmod +x install.sh
 yes | ./install.sh --openai-api-key ollama --openai-base-url http://host.docker.internal:11434/v1
@@ -55,3 +55,11 @@ systemctl enable helix-startup.service
 rm -f /root/.bash_history
 rm -f /root/.ssh/authorized_keys
 rm -rf /var/log/*
+
+ ## Wipe unused disk space with zeros for security and compression.
+ echo "Clearing free disk space. This may take several minutes."
+ dd if=/dev/zero of=/zerofile status=progress
+ sync
+ rm /zerofile
+ sync
+ echo "System setup is complete. Begin snapshot process."
