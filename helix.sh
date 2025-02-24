@@ -1,9 +1,11 @@
 #!/bin/bash
 
+echo "01: Prepration"
+
 ## Prerequisites
 chmod +x /root/vultr-helper.sh
 . /root/vultr-helper.sh
-error_detect_on
+# error_detect_on
 install_cloud_init latest
 
 # Install Docker if not installed
@@ -16,11 +18,12 @@ if ! [ -x "$(command -v ollama)" ]; then
   curl -fsSL https://ollama.com/install.sh | sh
 fi
 
-# Install Helix
+echo "02: Configure Helix"
 curl -sL -O https://get.helix.ml/install.sh
 chmod +x install.sh
 yes | ./install.sh --openai-api-key ollama --openai-base-url http://host.docker.internal:11434/v1
 
+echo "03: Install Helix"
 # Config Ollma server to accept Helix if not already done
 if ! grep -q "OLLAMA_HOST" /etc/systemd/system/ollama.service; then
   sed -i "/\[Service\]/a Environment=\"OLLAMA_HOST=0.0.0.0:11434\"" /etc/systemd/system/ollama.service
@@ -57,5 +60,6 @@ EOF
 # Enable the service
 systemctl enable helix-startup.service
 
+echo "04: Clean up"
 ## Prepare server snapshot for Marketplace
 clean_system
