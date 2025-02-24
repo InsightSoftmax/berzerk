@@ -1,5 +1,11 @@
 #!/bin/bash
 
+## Prerequisites
+chmod +x /root/vultr-helper.sh
+. /root/vultr-helper.sh
+error_detect_on
+install_cloud_init latest
+
 # Install Docker if not installed
 if ! [ -x "$(command -v docker)" ]; then
   curl -fsSL https://get.docker.com | sh -
@@ -51,15 +57,5 @@ EOF
 # Enable the service
 systemctl enable helix-startup.service
 
-# Clean up sensitive data
-rm -f /root/.bash_history
-rm -f /root/.ssh/authorized_keys
-rm -rf /var/log/*
-
- ## Wipe unused disk space with zeros for security and compression.
- echo "Clearing free disk space. This may take several minutes."
- dd if=/dev/zero of=/zerofile status=progress
- sync
- rm /zerofile
- sync
- echo "System setup is complete. Begin snapshot process."
+## Prepare server snapshot for Marketplace
+clean_system
