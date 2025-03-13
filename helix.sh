@@ -3,8 +3,8 @@
 echo "01: Prepration"
 
 ## Prerequisites
-chmod +x /root/vultr-helper.sh
-. /root/vultr-helper.sh
+chmod +x /root/packer-helper.sh
+. /root/packer-helper.sh
 # error_detect_on
 install_cloud_init latest
 
