@@ -10,17 +10,17 @@ packer {
 
 variable "aws_access_key" {
   type    = string
-  default = env("AWS_ACCESS_KEY_ID")
-}
-
-variable "aws_secret_key" {
-  type    = string
-  default = env("AWS_SECRET_ACCESS_KEY")
+  default = ""
 }
 
 variable "aws_region" {
   type    = string
-  default = env("AWS_REGION")
+  default = ""
+}
+
+variable "aws_secret_key" {
+  type    = string
+  default = ""
 }
 
 variable "instance_type" {
@@ -42,6 +42,9 @@ variable "ssh_username" {
 }
 
 data "amazon-ami" "ubuntu" {
+  access_key = var.aws_access_key
+  secret_key = var.aws_secret_key
+  region     = var.aws_region
   filters = {
     name                = "ubuntu/images/*ubuntu-noble-24.04-amd64-server-*"
     root-device-type    = "ebs"
@@ -49,7 +52,6 @@ data "amazon-ami" "ubuntu" {
   }
   most_recent = true
   owners      = ["099720109477"] # Canonical's AWS account ID
-  region      = var.aws_region
 }
 
 source "amazon-ebs" "helix" {
@@ -71,10 +73,8 @@ source "amazon-ebs" "helix" {
 }
 
 build {
-  name = "helix-ai"
-  sources = [
-    "source.amazon-ebs.helix"
-  ]
+  name    = "helix-ai"
+  sources = ["source.amazon-ebs.helix"]
 
   provisioner "file" {
     source      = "packer-helper.sh"
