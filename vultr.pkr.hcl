@@ -42,8 +42,8 @@ build {
   }
 
   provisioner "file" {
-    source      = "vultr-helper.sh"
-    destination = "/root/vultr-helper.sh"
+    source      = "packer-helper.sh"
+    destination = "/root/packer-helper.sh"
   }
 
   provisioner "shell" {
