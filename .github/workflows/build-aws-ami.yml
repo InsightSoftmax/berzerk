@@ -1,0 +1,87 @@
+name: Build AWS AMI for Helix.ml
+
+on:
+  workflow_dispatch:
+    inputs:
+      aws_region:
+        description: "Select region"
+        type: choice
+        options:
+          - us-west-2
+          - us-east-2
+        default: "us-west-2"
+      environment_name:
+        description: "Select environment to publish AMI for"
+        type: choice
+        options:
+          - "dev01-uw2"
+          - "dev01-ue2"
+        default: "dev01-uw2"
+
+env:
+  PACKER_VERSION: "1.11.2"
+  AWS_REGION: ${{ github.event.inputs.aws_region }}
+  AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_ID }}
+  AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+  ENVIRONMENT_NAME: ${{ github.event.inputs.environment_name }}
+  ANSIBLE_GALAXY_SERVER_ISC_TOKEN: ${{ secrets.JFROG_TOKEN }}
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      ami_region: ${{ steps.prepare_string.outputs.ami_region }}
+    steps:
+      - name: Prepare environment variables
+        id: prepare_string
+        run: |
+          # Example: convert "dev01-uw2" into a shorter AMI region string (e.g., "uw2")
+          input=${{ env.ENVIRONMENT_NAME }}
+          ami_region="${input:5}"  # assumes the region code starts at character 6
+          echo "AMI Region: $ami_region"
+          echo "ami_region=$ami_region" >> $GITHUB_OUTPUT
+
+  publish:
+    runs-on: ubuntu-latest
+    needs: [prepare]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Setup packer
+        uses: hashicorp/setup-packer@v3
+        with:
+          version: ${{ env.PACKER_VERSION }}
+
+      - name: Setup AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Verify AWS Credentials
+        run: aws sts get-caller-identity
+
+      - name: Prepare environment file
+        run: |
+          cp .env.example .env
+          # Append AWS credentials from env
+          echo "export aws_access_key=${AWS_ACCESS_KEY}" >> .env
+          echo "export aws_secret_key=${AWS_SECRET_ACCESS_KEY}" >> .env
+          # Update AWS region using the selected input
+          sed -i "s/us-west-2/${AWS_REGION}/" .env
+
+      - name: Build AWS AMI and capture output
+        id: build_ami
+        run: |
+          chmod +x build.sh
+          OUTPUT=$(./build.sh aws)
+          echo "$OUTPUT"
+          # Extract AMI ID from the output (assumes AMI IDs are formatted like "ami-xxxxxxxx")
+          AMI_ID=$(echo "$OUTPUT" | grep -oE 'ami-[a-zA-Z0-9]+' | head -n1)
+          echo "Built AMI ID: $AMI_ID"
+          echo "::set-output name=ami_id::$AMI_ID"
+
+      - name: Use AMI ID (optional)
+        run: echo "The newly built AMI ID is ${{ steps.build_ami.outputs.ami_id }}"
