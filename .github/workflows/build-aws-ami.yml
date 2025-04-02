@@ -54,6 +54,11 @@ jobs:
         with:
           version: ${{ env.PACKER_VERSION }}
 
+      - name: Prepare environment file
+        run: |
+          cp .env.example .env
+          sed -i "s/us-west-2/${AWS_REGION}/" .env
+
       - name: Build AWS AMI and capture output
         id: build_ami
         run: |
