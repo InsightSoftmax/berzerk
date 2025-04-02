@@ -23,10 +23,11 @@ on:
 
 env:
   PACKER_VERSION: "1.11.2"
-  AWS_REGION: ${{ github.event.inputs.aws_region }}
+  # Defaults for push events
+  AWS_REGION: "us-west-2"
+  ENVIRONMENT_NAME: "dev01-uw2"
   AWS_ACCESS_KEY: ${{ secrets.AWS_ACCESS_KEY_ID }}
   AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  ENVIRONMENT_NAME: ${{ github.event.inputs.environment_name }}
   ANSIBLE_GALAXY_SERVER_ISC_TOKEN: ${{ secrets.JFROG_TOKEN }}
 
 jobs:
